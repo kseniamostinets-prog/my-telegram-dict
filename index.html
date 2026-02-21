@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Словарь</title>
+
+  <!-- Telegram WebApp SDK (не обязателен для простого словаря, но полезен для корректного поведения в ТГ) -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+
+  <style>
+    :root { font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial; }
+    body { margin: 0; padding: 16px; }
+    h1 { margin: 0 0 12px; font-size: 20px; }
+    .hint { opacity: .7; font-size: 13px; margin-bottom: 12px; }
+    .search { width: 100%; padding: 12px 14px; font-size: 16px; border: 1px solid #ddd; border-radius: 12px; }
+    .list { margin-top: 12px; display: grid; gap: 10px; }
+    details { border: 1px solid #e6e6e6; border-radius: 14px; padding: 10px 12px; background: #fff; }
+    summary { cursor: pointer; font-weight: 700; font-size: 16px; list-style: none; }
+    summary::-webkit-details-marker { display: none; }
+    .def { margin-top: 8px; line-height: 1.4; font-size: 15px; }
+    .tag { display:inline-block; font-size:12px; opacity:.7; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <h1>Словарь</h1>
+  <div class="hint">Нажмите на слово, чтобы увидеть значение. Можно искать.</div>
+
+  <input id="q" class="search" placeholder="Поиск по слову…" />
+
+  <div id="list" class="list"></div>
+
+  <script>
+    // 1) Здесь вы редактируете/добавляете слова
+    const WORDS = [
+      { w: "Контейнирование", d: "Способ быть рядом с эмоциями другого: выдерживать, называть, помогать пережить чувство без осуждения и без 'починки'." },
+      { w: "Граница", d: "Понятные правила и рамки: что можно/нельзя, что безопасно, кто за что отвечает. Границы снижают хаос и тревогу." },
+      { w: "Триггер", d: "Ситуация/слово/жест, который автоматически запускает сильную реакцию, часто связанную с прошлым опытом." }
+    ];
+
+    // 2) Аккуратная интеграция с Telegram WebApp
+    const tg = window.Telegram?.WebApp;
+    if (tg) {
+      tg.ready();
+      tg.expand(); // раскрыть на максимум в WebView
+    }
+
+    const list = document.getElementById('list');
+    const q = document.getElementById('q');
+
+    function render(filter = "") {
+      const f = filter.trim().toLowerCase();
+      const items = WORDS
+        .filter(x => x.w.toLowerCase().includes(f))
+        .sort((a,b) => a.w.localeCompare(b.w, 'ru'));
+
+      list.innerHTML = items.map(x => `
+        <details>
+          <summary>${escapeHtml(x.w)}</summary>
+          <div class="def">${escapeHtml(x.d)}</div>
+        </details>
+      `).join("") || `<div class="hint">Ничего не найдено.</div>`;
+    }
+
+    function escapeHtml(s) {
+      return s.replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+    }
+
+    q.addEventListener('input', () => render(q.value));
+    render();
+  </script>
+</body>
+</html>
